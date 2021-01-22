@@ -1,10 +1,10 @@
 <?php
 
-use Myth\Auth\Models\UserModel;
-use ModuleTests\Support\AuthTestCase;
 use Myth\Auth\Authorization\GroupModel;
 use Myth\Auth\Authorization\PermissionModel;
 use Myth\Auth\Authorization\FlatAuthorization;
+use Myth\Auth\Models\UserModel;
+use Tests\Support\AuthTestCase;
 
 class FlatAuthorizationTest extends AuthTestCase
 {
@@ -343,6 +343,42 @@ class FlatAuthorizationTest extends AuthTestCase
         $this->assertTrue($this->auth->doesUserHavePermission($user->id, $permission->id));
     }
 
+    public function testDoesUSerHavePermissionByGroupAssign()
+    {
+        $user = $this->createUser();
+        $group1 = $this->createGroup();
+        $group2 = $this->createGroup();
+        $permission1 = $this->createPermission();
+        $permission2 = $this->createPermission();
+
+        // group1 has both permissions
+        $this->hasInDatabase('auth_groups_permissions', [
+            'group_id' => $group1->id,
+            'permission_id' => $permission1->id
+        ]);
+        $this->hasInDatabase('auth_groups_permissions', [
+            'group_id' => $group1->id,
+            'permission_id' => $permission2->id
+        ]);
+
+        // group2 has only one permission
+        $this->hasInDatabase('auth_groups_permissions', [
+            'group_id' => $group2->id,
+            'permission_id' => $permission2->id
+        ]);
+
+        // user is assigned to proup2
+        $this->hasInDatabase('auth_groups_users', [
+            'group_id' => $group2->id,
+            'user_id' => $user->id
+        ]);
+
+        // no permission for permission1
+        $this->assertFalse($this->auth->doesUserHavePermission($user->id, $permission1->id));
+        // but he has permission for permission2
+        $this->assertTrue($this->auth->doesUserHavePermission($user->id, $permission2->id));
+    }
+
     public function testGroupNotFound()
     {
         $this->assertNull($this->auth->group('some_group'));
@@ -477,5 +513,25 @@ class FlatAuthorizationTest extends AuthTestCase
             'name' => 'Perm B',
             'description' => 'More Words'
         ]);
+    }
+
+    public function testGroupPermissionsEmpty()
+    {
+        $group = $this->createGroup();
+
+        $this->assertEquals([], $this->auth->groupPermissions($group->id));
+    }
+
+    public function testGroupPermissions()
+    {
+        $group = $this->createGroup();
+        $perm = $this->createPermission();
+
+        $this->auth->addPermissionToGroup($perm->id, $group->id);
+
+        $found = $this->auth->groupPermissions($group->id);
+
+        $this->assertTrue(isset($found[$perm->id]));
+        $this->assertEquals((array)$perm, $found[$perm->id]);
     }
 }

@@ -2,7 +2,7 @@
 
 use Myth\Auth\Authorization\PermissionModel;
 use Myth\Auth\Entities\User;
-use ModuleTests\Support\AuthTestCase;
+use Tests\Support\AuthTestCase;
 
 class UserEntityTest extends AuthTestCase
 {
@@ -13,9 +13,14 @@ class UserEntityTest extends AuthTestCase
 
     public function setUp(): void
     {
+        \Config\Services::reset();
+
         parent::setUp();
 
-        $this->user = $this->createUser();
+        // Don't worry about default groups for this...
+        $config = new \Myth\Auth\Config\Auth();
+        $config->defaultGroup = 'Administrators';
+        \CodeIgniter\Config\Config::injectMock('Auth', $config);
     }
 
     /**
@@ -31,13 +36,14 @@ class UserEntityTest extends AuthTestCase
 
 	public function testGetPermissionSuccess()
 	{
+        $user = $this->createUser();
 	    $perm = $this->createPermission();
 	    $model = new PermissionModel();
 
-		$this->assertEmpty($this->user->getPermissions());
+		$this->assertEmpty($user->getPermissions());
 
-		$model->addPermissionToUser($perm->id, $this->user->id);
+		$model->addPermissionToUser($perm->id, $user->id);
 
-		$this->assertTrue(in_array($perm->name, $this->user->getPermissions()));
+		$this->assertTrue(in_array($perm->name, $user->getPermissions()));
 	}
 }

@@ -1,6 +1,6 @@
 # Myth:Auth
 
-[![](https://github.com/lonnieezell/myth-auth/workflows/PHP%20Tests/badge.svg)](https://github.com/lonnieezell/myth-auth/actions?query=workflow%3A%22PHP+Tests%22)
+[![](https://github.com/lonnieezell/myth-auth/workflows/PHPUnit/badge.svg)](https://github.com/lonnieezell/myth-auth/actions?query=workflow%3A%22PHPUnit%22)
 
 Flexible, Powerful, Secure auth package for CodeIgniter 4.
 
@@ -8,20 +8,26 @@ Flexible, Powerful, Secure auth package for CodeIgniter 4.
 
 This repo is maintained by volunteers. If you post an issue and haven't heard from us within 7 days, feel free to ping the issue so that we see it again. 
 
-## Intended Features
+## Requirements
+
+- PHP 7.2+
+- CodeIgniter 4. Changes in beta-3 require the latest develop branch of CodeIgniter 4 to work correctly (4.0.3 won't do).
+
+## Features
 
 This is meant to be a one-stop shop for 99% of your web-based authentication needs with CI4. It includes
 the following primary features: 
 
-- [x] Password-based authentication with remember-me functionality for web apps
-- [x] Flat RBAC per NIST standards, described [here](https://csrc.nist.gov/Projects/Role-Based-Access-Control) and [here](https://pdfs.semanticscholar.org/aeb1/e9676e2d7694f268377fc22bdb510a13fab7.pdf).
-- [x] All views/javascript necessary in cross-browser manner
-- [x] Publish files to the main application via a CLI command for easy customization
-- [x] Debug Toolbar integration
+- Password-based authentication with remember-me functionality for web apps
+- Flat RBAC per NIST standards, described [here](https://csrc.nist.gov/Projects/Role-Based-Access-Control) and [here](https://pdfs.semanticscholar.org/aeb1/e9676e2d7694f268377fc22bdb510a13fab7.pdf).
+- All views necessary for login, registration and forgotten password flows.
+- Publish files to the main application via a CLI command for easy customization
+- Debug Toolbar integration
+- Email-based account verification
 
 ## Installation
 
-Installation is intended to be done via Composer. Assuming Composer is installed globally, you may use
+Installation is best done via Composer. Assuming Composer is installed globally, you may use
 the following command: 
 
     > composer require myth/auth
@@ -104,7 +110,7 @@ The following Services are provided by the package:
 
 **authentication** 
 
-Provides access to any of the authenticacation packages that Myth:Auth knows about. By default
+Provides access to any of the authentication packages that Myth:Auth knows about. By default
 it will return the "Local Authentication" library, which is the basic password-based system.
 
     $authenticate = Config\Services::authentication();
@@ -119,7 +125,7 @@ Provides access to any of the authorization libraries that Myth:Auth knows about
 it will return the "Flat" authorization library, which is a Flat RBAC (role-based access control)
 as defined by NIST. It provides user-specific permissions as well as group (role) based permissions.
 
-    $authorize = $auth = Config\Services::authorization();
+    $authorize = Config\Services::authorization();
 
 **passwords**
 
@@ -201,6 +207,19 @@ It also provides a UserModel that should be used as it provides methods needed d
 password-reset flow, as well as basic validation rules. You are free to extend this class
 or modify it as needed.
 
+The UserModel can automatically assign a role during user creation. Pass the group name to the 
+`withGroup()` method prior to calling `insert()` or `save()` to create a new user and the user 
+will be automatically added to that group.
+
+```
+    $user = $userModel
+                ->withGroup('guests')
+                ->insert($data);
+```
+
+User registration already handles this for you, and looks to the Auth config file's, `$defaultUserGroup` 
+setting for the name of the group to add the user to. Please, keep in mind that `$defaultUserGroup` variable is not set by default.
+
 ### Toolbar
 
 Myth:Auth includes a toolbar collector to make it easy for developers to work with and troubleshoot
@@ -278,7 +297,5 @@ $routes->group('admin', ['filter' => 'role:admin,superadmin'], function($routes)
 
 ## Customization
 
-This library is intentionally slim on user identifying information, having only the fields necessary for
-authentication and authorization. You will likely want to add fields like a user's name or phone number.
-You can create your own migration to add these fields (see: [an example migration](bin/20190603101528_alter_table_users.php).
-If you used `auth:publish` you can also add these fields to your `UserModel`'s `$allowedFields` property.
+See the [Extending](docs/extending.md) documentation.
+

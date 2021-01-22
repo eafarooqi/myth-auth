@@ -18,10 +18,11 @@ class LoginFilter implements FilterInterface
 	 * redirects, etc.
 	 *
 	 * @param \CodeIgniter\HTTP\RequestInterface $request
+	 * @param array|null                         $params
 	 *
 	 * @return mixed
 	 */
-	public function before(RequestInterface $request)
+	public function before(RequestInterface $request, $params = null)
 	{
 		if (! function_exists('logged_in'))
 		{
@@ -34,7 +35,7 @@ class LoginFilter implements FilterInterface
 			->stripQuery('token');
 
 		// Make sure this isn't already a login route
-		if (in_array((string)$current, [route_to('login'), route_to('forgot'), route_to('reset-password')]))
+		if (in_array((string)$current, [route_to('login'), route_to('forgot'), route_to('reset-password'), route_to('register'), route_to('activate-account')]))
 		{
 			return;
 		}
@@ -58,10 +59,11 @@ class LoginFilter implements FilterInterface
 	 *
 	 * @param \CodeIgniter\HTTP\RequestInterface  $request
 	 * @param \CodeIgniter\HTTP\ResponseInterface $response
+	 * @param array|null                          $arguments
 	 *
-	 * @return mixed
+	 * @return void
 	 */
-	public function after(RequestInterface $request, ResponseInterface $response)
+	public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
 	{
 
 	}

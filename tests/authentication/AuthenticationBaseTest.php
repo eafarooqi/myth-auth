@@ -1,7 +1,7 @@
 <?php
 
-use ModuleTests\Support\AuthTestCase;
 use Myth\Auth\Authentication\LocalAuthenticator;
+use Tests\Support\AuthTestCase;
 
 class AuthenticationBaseTest extends AuthTestCase
 {
@@ -89,6 +89,10 @@ class AuthenticationBaseTest extends AuthTestCase
     {
         $user = $this->createUser();
 
+        $config = config('Auth');
+        $config->allowRemembering = true;
+        $this->setPrivateProperty($this->auth, 'config', $config);
+
         $this->assertTrue($this->auth->login($user, true));
 
         // Should have logged login attempt
@@ -98,11 +102,22 @@ class AuthenticationBaseTest extends AuthTestCase
             'success' => 1
         ]);
 
-        $this->assertEquals(4, $_SESSION['logged_in']);
+        $this->assertEquals($user->id, $_SESSION['logged_in']);
 
         $this->seeInDatabase('auth_tokens', [
             'user_id' => $user->id
         ]);
     }
 
+    public function testLogoutLogsOut()
+    {
+        $user = $this->createUser();
+
+        $this->assertTrue($this->auth->login($user));
+
+		$this->auth->logout();
+
+        $this->assertFalse($this->auth->isLoggedIn());
+        $this->assertNull($this->auth->user());
+    }
 }

@@ -4,6 +4,7 @@ use Config\Services;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\Filters\FilterInterface;
+use Myth\Auth\Exceptions\PermissionException;
 
 class RoleFilter implements FilterInterface
 {
@@ -61,7 +62,7 @@ class RoleFilter implements FilterInterface
 			return redirect()->to($redirectURL)->with('error', lang('Auth.notEnoughPrivilege'));
 		}
 		else {
-			throw new \RuntimeException(lang('Auth.notEnoughPrivilege'));
+			throw new PermissionException(lang('Auth.notEnoughPrivilege'));
 		}
 	}
 
@@ -75,10 +76,11 @@ class RoleFilter implements FilterInterface
 	 *
 	 * @param \CodeIgniter\HTTP\RequestInterface  $request
 	 * @param \CodeIgniter\HTTP\ResponseInterface $response
+	 * @param array|null                          $arguments
 	 *
-	 * @return mixed
+	 * @return void
 	 */
-	public function after(RequestInterface $request, ResponseInterface $response)
+	public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
 	{
 
 	}

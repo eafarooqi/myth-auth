@@ -1,9 +1,9 @@
 <?php
 
-use ModuleTests\Support\AuthTestCase;
 use Myth\Auth\Entities\User;
 use Myth\Auth\Models\UserModel;
 use Myth\Auth\Authentication\LocalAuthenticator;
+use Tests\Support\AuthTestCase;
 
 class LocalAuthTest extends AuthTestCase
 {
@@ -24,6 +24,13 @@ class LocalAuthTest extends AuthTestCase
         parent::setUp();
 
         $this->auth = \Myth\Auth\Config\Services::authentication('local');
+    }
+
+    public function tearDown(): void
+    {
+        parent::tearDown();
+
+        $_SESSION = [];
     }
 
     public function testValidateNoPassword()
@@ -90,5 +97,24 @@ class LocalAuthTest extends AuthTestCase
         $user = $this->createUser();
 
         $this->assertFalse($this->auth->check());
+    }
+
+    public function testCheckWithForcedPasswordReset()
+    {
+        $users = model(UserModel::class);
+        $user = $this->createUser();
+        $user->forcePasswordReset();
+        $users->save($user);
+
+        $_SESSION = [
+            'logged_in' => $user->id
+        ];
+        $this->assertTrue(! empty($user->reset_hash));
+        $this->expectException(\CodeIgniter\Router\Exceptions\RedirectException::class);
+        $this->expectExceptionMessage(route_to('reset-password') .'?token='. $user->reset_hash);
+
+        $this->auth->check();
+
+        unset($_SESSION['logged_in']);
     }
 }
